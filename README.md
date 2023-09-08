@@ -3,9 +3,8 @@ Based on the [GP2040-CE](https://github.com/OpenStickCommunity/GP2040-CE) PicoFi
 
 Add the colorful LEDs and the OLED display.
 
-![Flatbox-LED](pictures/4.jpg)
+![GamePad-LED](hardware/1.jpg)
 
-![Flatbox-LED](pictures/5.png)
+![GamePad-LED](hardware/sch.jpg)
 
-
-
+![GamePad-LED](hardware/5.png)

@@ -13,7 +13,7 @@
 // You can set any of the main pins as `-1` to disable it.
 // The Turbo pin and LS + RS slider pins can also be set to `-1` to disable that functionality.
 // Please note that only when `PIN_BUTTON_TURBO` is set to `-1` will the `T##` be removed from a connected display.
-// Please note that only when `PIN_SLIDER_LS` and  `PIN_SLIDER_RS` are set to `-1` will the button combo shortcut for DP/LS/RS work.
+// Please note that only when `PIN_SLIDER_ONE` and  `PIN_SLIDER_TWO` are set to `-1` will the button combo shortcut for DP/LS/RS work.
 // The buttons are listed in GP2040 configuration, beside each the listed order is *GP2040 / Xinput / Switch / PS3 / Directinput / Arcade*
 
 #define PIN_DPAD_UP     1           // UP
@@ -22,14 +22,14 @@
 #define PIN_DPAD_LEFT   0           // LEFT
 #define PIN_BUTTON_B1   11          // B1 / A / B / Cross / 2 / K1
 #define PIN_BUTTON_B2   12          // B2 / B / A / Circle / 3 / K2
-#define PIN_BUTTON_R2   13          // R2 / RT / ZR / R2 / 8 / K3
+#define PIN_BUTTON_R2   13         // R2 / RT / ZR / R2 / 8 / K3
 #define PIN_BUTTON_L2   14          // L2 / LT / ZL / L2 / 7 / K4
 #define PIN_BUTTON_B3   7           // B3 / X / Y / Square / 1 / P1
 #define PIN_BUTTON_B4   8           // B4 / Y / X / Triangle / 4 / P2
 #define PIN_BUTTON_R1   9           // R1 / RB / R / R1 / 6 / P3
 #define PIN_BUTTON_L1   10          // L1 / LB / L / L1 / 5 / P4
 #define PIN_BUTTON_S1   5           // S1 / Back / Minus / Select / 9 / Coin
-#define PIN_BUTTON_S2   6           // S2 / Start / Plus / Start / 10 / Start
+#define PIN_BUTTON_S2   6          // S2 / Start / Plus / Start / 10 / Start
 #define PIN_BUTTON_L3   21          // L3 / LS / LS / L3 / 11 / LS
 #define PIN_BUTTON_R3   22          // R3 / RS / RS / R3 / 12 / RS
 #define PIN_BUTTON_A1   4           // A1 / Guide / Home / PS / 13 / ~
@@ -37,8 +37,8 @@
 #define PIN_BUTTON_FN   -1          // Hotkey Function
 #define PIN_BUTTON_TURBO 28         // Turbo
 #define PIN_BUTTON_REVERSE -1       // UDLR Reverse
-#define PIN_SLIDER_LS    -1         // Left Stick Slider
-#define PIN_SLIDER_RS    -1         // Right Stick Slider
+#define PIN_SLIDER_ONE    -1         // Left Stick Slider
+#define PIN_SLIDER_TWO    -1         // Right Stick Slider
 #define PIN_SLIDER_SOCD_ONE    -1         // SOCD Slider Pin One
 #define PIN_SLIDER_SOCD_TWO    -1         // SOCD Slider Pin Two
 
@@ -59,6 +59,8 @@
 
 #define DEFAULT_FORCED_SETUP_MODE FORCED_SETUP_MODE_OFF // 	FORCED_SETUP_MODE_OFF, FORCED_SETUP_MODE_LOCK_MODE_SWITCH, FORCED_SETUP_MODE_LOCK_WEB_CONFIG, FORCED_SETUP_MODE_LOCK_BOTH
 #define DEFAULT_LOCK_HOTKEYS false // or true
+
+#define DEFAULT_PS4CONTROLLER_TYPE PS4_CONTROLLER
 
 // This is the LEDs section.
 // The default `TURBO_LED_PIN` pin is set to `15` ( it is recommended to run through 3V3(OUT) with a resistor)
@@ -190,7 +192,7 @@
 // Special note - All of the splash screen images can be changed via `include/bitmaps.h`
 
 #define HAS_I2C_DISPLAY 1
-#define I2C_SDA_PIN 26
+#define I2C_SDA_PIN 26   
 #define I2C_SCL_PIN 27
 #define I2C_BLOCK i2c1
 #define I2C_SPEED 400000

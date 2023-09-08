@@ -62,6 +62,7 @@ public:
 	Gamepad(int debounceMS = 5);
 
 	void setup();
+	void teardown_and_reinit(const uint32_t profileNum);
 	void process();
 	void read();
 	void save();
@@ -153,8 +154,8 @@ public:
 	void setSOCDMode(SOCDMode socdMode) { options.socdMode = socdMode; }
 	void setDpadMode(DpadMode dpadMode) { options.dpadMode = dpadMode; }
 
-	GamepadDebouncer debouncer;
 	const uint8_t debounceMS;
+	GamepadDebouncer debouncer;
 	GamepadState rawState;
 	GamepadState state;
 	GamepadButtonMapping *mapDpadUp;
