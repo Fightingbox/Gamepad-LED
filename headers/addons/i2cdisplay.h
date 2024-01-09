@@ -239,6 +239,8 @@ private:
 	uint16_t prevButtonState;
 	bool turnOffWhenSuspended;
 	bool isInputHistoryEnabled;
+	bool isFocusModeEnabled;
+	bool focusModePrevState;
 	InputHistoryAddon* inputHistoryAddon;
 };
 

@@ -45,75 +45,77 @@ uint32_t rgbPLEDValues[4];
 PLEDAnimationState getXInputAnimationNEOPICO(uint8_t *data)
 {
 	PLEDAnimationState animationState =
-	{
-		.state = 0,
-		.animation = PLED_ANIM_NONE,
-		.speed = PLED_SPEED_OFF,
-	};
+		{
+			.state = 0,
+			.animation = PLED_ANIM_NONE,
+			.speed = PLED_SPEED_OFF,
+		};
 
 	// Check first byte for LED payload
 	if (data[0] == 0x01)
 	{
 		switch (data[2])
 		{
-			case XINPUT_PLED_BLINKALL:
-			case XINPUT_PLED_ROTATE:
-			case XINPUT_PLED_BLINK:
-			case XINPUT_PLED_SLOWBLINK:
-			case XINPUT_PLED_ALTERNATE:
-				animationState.state = (PLED_STATE_LED1 | PLED_STATE_LED2 | PLED_STATE_LED3 | PLED_STATE_LED4);
-				animationState.animation = PLED_ANIM_BLINK;
-				animationState.speed = PLED_SPEED_FAST;
-				break;
+		case XINPUT_PLED_BLINKALL:
+		case XINPUT_PLED_ROTATE:
+		case XINPUT_PLED_BLINK:
+		case XINPUT_PLED_SLOWBLINK:
+		case XINPUT_PLED_ALTERNATE:
+			animationState.state = (PLED_STATE_LED1 | PLED_STATE_LED2 | PLED_STATE_LED3 | PLED_STATE_LED4);
+			animationState.animation = PLED_ANIM_BLINK;
+			animationState.speed = PLED_SPEED_FAST;
+			break;
 
-			case XINPUT_PLED_FLASH1:
-			case XINPUT_PLED_ON1:
-				animationState.state = PLED_STATE_LED1;
-				animationState.animation = PLED_ANIM_SOLID;
-				animationState.speed = PLED_SPEED_OFF;
-				break;
+		case XINPUT_PLED_FLASH1:
+		case XINPUT_PLED_ON1:
+			animationState.state = PLED_STATE_LED1;
+			animationState.animation = PLED_ANIM_SOLID;
+			animationState.speed = PLED_SPEED_OFF;
+			break;
 
-			case XINPUT_PLED_FLASH2:
-			case XINPUT_PLED_ON2:
-				animationState.state = PLED_STATE_LED2;
-				animationState.animation = PLED_ANIM_SOLID;
-				animationState.speed = PLED_SPEED_OFF;
-				break;
+		case XINPUT_PLED_FLASH2:
+		case XINPUT_PLED_ON2:
+			animationState.state = PLED_STATE_LED2;
+			animationState.animation = PLED_ANIM_SOLID;
+			animationState.speed = PLED_SPEED_OFF;
+			break;
 
-			case XINPUT_PLED_FLASH3:
-			case XINPUT_PLED_ON3:
-				animationState.state = PLED_STATE_LED3;
-				animationState.animation = PLED_ANIM_SOLID;
-				animationState.speed = PLED_SPEED_OFF;
-				break;
+		case XINPUT_PLED_FLASH3:
+		case XINPUT_PLED_ON3:
+			animationState.state = PLED_STATE_LED3;
+			animationState.animation = PLED_ANIM_SOLID;
+			animationState.speed = PLED_SPEED_OFF;
+			break;
 
-			case XINPUT_PLED_FLASH4:
-			case XINPUT_PLED_ON4:
-				animationState.state = PLED_STATE_LED4;
-				animationState.animation = PLED_ANIM_SOLID;
-				animationState.speed = PLED_SPEED_OFF;
-				break;
+		case XINPUT_PLED_FLASH4:
+		case XINPUT_PLED_ON4:
+			animationState.state = PLED_STATE_LED4;
+			animationState.animation = PLED_ANIM_SOLID;
+			animationState.speed = PLED_SPEED_OFF;
+			break;
 
-			default:
-				break;
+		default:
+			break;
 		}
 	}
 
 	return animationState;
 }
 
-bool NeoPicoLEDAddon::available() {
-	const LEDOptions& ledOptions = Storage::getInstance().getLedOptions();
+bool NeoPicoLEDAddon::available()
+{
+	const LEDOptions &ledOptions = Storage::getInstance().getLedOptions();
 	return isValidPin(ledOptions.dataPin);
 }
 
 void NeoPicoLEDAddon::setup()
 {
 	// Set Default LED Options
-	const LEDOptions& ledOptions = Storage::getInstance().getLedOptions();
+	const LEDOptions &ledOptions = Storage::getInstance().getLedOptions();
 	turnOffWhenSuspended = ledOptions.turnOffWhenSuspended;
 
-	if ( ledOptions.pledType == PLED_TYPE_RGB ) {
+	if (ledOptions.pledType == PLED_TYPE_RGB)
+	{
 		neoPLEDs = new NeoPicoPlayerLEDs();
 	}
 
@@ -124,27 +126,34 @@ void NeoPicoLEDAddon::setup()
 	configureLEDs();
 
 	nextRunTime = make_timeout_time_ms(0); // Reset timeout
+
+	const FocusModeOptions &focusModeOptions = Storage::getInstance().getAddonOptions().focusModeOptions;
+	isFocusModeEnabled = focusModeOptions.enabled && focusModeOptions.rgbLockEnabled &&
+						 isValidPin(focusModeOptions.pin);
 }
 
 void NeoPicoLEDAddon::process()
 {
-	const LEDOptions& ledOptions = Storage::getInstance().getLedOptions();
+	const LEDOptions &ledOptions = Storage::getInstance().getLedOptions();
 	if (!isValidPin(ledOptions.dataPin) || !time_reached(this->nextRunTime))
 		return;
 
-	Gamepad * gamepad = Storage::getInstance().GetProcessedGamepad();
-	uint8_t * featureData = Storage::getInstance().GetFeatureData();
+	Gamepad *gamepad = Storage::getInstance().GetProcessedGamepad();
+	uint8_t *featureData = Storage::getInstance().GetFeatureData();
 	AnimationHotkey action = animationHotkeys(gamepad);
-	if (ledOptions.pledType == PLED_TYPE_RGB) {
+	if (ledOptions.pledType == PLED_TYPE_RGB)
+	{
 		inputMode = gamepad->getOptions().inputMode; // HACK
-		if (inputMode == INPUT_MODE_XINPUT) {
+		if (inputMode == INPUT_MODE_XINPUT)
+		{
 			animationState = getXInputAnimationNEOPICO(featureData);
 			if (neoPLEDs != nullptr && animationState.animation != PLED_ANIM_NONE)
 				neoPLEDs->animate(animationState);
 		}
 	}
 
-	if ( action != HOTKEY_LEDS_NONE ) {
+	if (action != HOTKEY_LEDS_NONE)
+	{
 		as.HandleEvent(action);
 	}
 
@@ -165,20 +174,47 @@ void NeoPicoLEDAddon::process()
 
 	as.Animate();
 
-	if (turnOffWhenSuspended && get_usb_suspended()) {
-		as.DimBrightnessTo0();
-	} else {
-		as.SetBrightness(AnimationStation::GetBrightness());
+	if (isFocusModeEnabled)
+	{
+		const FocusModeOptions &focusModeOptions = Storage::getInstance().getAddonOptions().focusModeOptions;
+		bool isFocusModeActive = !gpio_get(focusModeOptions.pin);
+		if (focusModePrevState != isFocusModeActive)
+		{
+			focusModePrevState = isFocusModeActive;
+			if (isFocusModeActive)
+			{
+				as.DimBrightnessTo0();
+			}
+			else
+			{
+				as.SetBrightness(AnimationStation::GetBrightness());
+			}
+		}
+	}
+	else
+	{
+
+		if (turnOffWhenSuspended && get_usb_suspended())
+		{
+			as.DimBrightnessTo0();
+		}
+		else
+		{
+			as.SetBrightness(AnimationStation::GetBrightness());
+		}
 	}
 
 	as.ApplyBrightness(frame);
 
 	// Apply the player LEDs to our first 4 leds if we're in NEOPIXEL mode
-	if (ledOptions.pledType == PLED_TYPE_RGB) {
-		if (inputMode == INPUT_MODE_XINPUT) { // HACK
-			LEDOptions & ledOptions = Storage::getInstance().getLedOptions();
-			int32_t pledPins[] = { ledOptions.pledPin1, ledOptions.pledPin2, ledOptions.pledPin3, ledOptions.pledPin4 };
-			for (int i = 0; i < PLED_COUNT; i++) {
+	if (ledOptions.pledType == PLED_TYPE_RGB)
+	{
+		if (inputMode == INPUT_MODE_XINPUT)
+		{ // HACK
+			LEDOptions &ledOptions = Storage::getInstance().getLedOptions();
+			int32_t pledPins[] = {ledOptions.pledPin1, ledOptions.pledPin2, ledOptions.pledPin3, ledOptions.pledPin4};
+			for (int i = 0; i < PLED_COUNT; i++)
+			{
 				if (pledPins[i] < 0)
 					continue;
 
@@ -197,7 +233,7 @@ void NeoPicoLEDAddon::process()
 	this->nextRunTime = make_timeout_time_ms(NeoPicoLEDAddon::intervalMS);
 }
 
-std::vector<uint8_t> * NeoPicoLEDAddon::getLEDPositions(string button, std::vector<std::vector<uint8_t>> *positions)
+std::vector<uint8_t> *NeoPicoLEDAddon::getLEDPositions(string button, std::vector<std::vector<uint8_t>> *positions)
 {
 	int buttonPosition = buttonPositions[button];
 	if (buttonPosition < 0)
@@ -216,36 +252,36 @@ std::vector<uint8_t> * NeoPicoLEDAddon::getLEDPositions(string button, std::vect
 std::vector<std::vector<Pixel>> NeoPicoLEDAddon::generatedLEDButtons(std::vector<std::vector<uint8_t>> *positions)
 {
 	std::vector<std::vector<Pixel>> pixels =
-	{
 		{
-			PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
-			PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
-		},
-		{
-			PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
-			PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
-			PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
-			PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
-			PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
-			PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
-			PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
-			PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
-			PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
-			PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
-			PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
-			PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
-			PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
-		},
-	};
+			{
+				PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
+				PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
+			},
+			{
+				PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
+				PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
+				PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
+				PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
+				PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
+				PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
+				PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
+				PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
+				PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
+				PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
+				PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
+				PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
+				PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
+			},
+		};
 
 	return pixels;
 }
@@ -256,56 +292,56 @@ std::vector<std::vector<Pixel>> NeoPicoLEDAddon::generatedLEDButtons(std::vector
 std::vector<std::vector<Pixel>> NeoPicoLEDAddon::generatedLEDStickless(vector<vector<uint8_t>> *positions)
 {
 	std::vector<std::vector<Pixel>> pixels =
-	{
 		{
-			PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
-			NO_PIXEL,
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
-			NO_PIXEL,
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
-			NO_PIXEL,
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
-			NO_PIXEL,
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
-			PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
-			PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
-			PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
-			PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
-			NO_PIXEL,
-		},
-		{
-			PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
-			PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
-			PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
-			PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
-			PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
-			PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
-		},
-	};
+			{
+				PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
+				NO_PIXEL,
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
+				NO_PIXEL,
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
+				NO_PIXEL,
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
+				NO_PIXEL,
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
+				PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
+				PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
+				PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
+				PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
+				NO_PIXEL,
+			},
+			{
+				PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
+				PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
+				PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
+				PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
+				PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
+				PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
+			},
+		};
 
 	return pixels;
 }
@@ -316,44 +352,44 @@ std::vector<std::vector<Pixel>> NeoPicoLEDAddon::generatedLEDStickless(vector<ve
 std::vector<std::vector<Pixel>> NeoPicoLEDAddon::generatedLEDWasd(std::vector<std::vector<uint8_t>> *positions)
 {
 	std::vector<std::vector<Pixel>> pixels =
-	{
 		{
-			NO_PIXEL,
-			PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
-		},
-		{
-			PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
-			PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
-		},
-		{
-			NO_PIXEL,
-			PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
-		},
-		{
-			PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
-			PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
-		},
-		{
-			PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
-			PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
-			PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
-			PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
-			PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
-			PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
-			PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
-			PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
-			PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
-		},
-	};
+			{
+				NO_PIXEL,
+				PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
+			},
+			{
+				PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
+				PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
+			},
+			{
+				NO_PIXEL,
+				PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
+			},
+			{
+				PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
+				PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
+			},
+			{
+				PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
+				PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
+				PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
+				PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
+				PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
+				PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
+				PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
+				PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
+				PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
+			},
+		};
 
 	return pixels;
 }
@@ -364,44 +400,44 @@ std::vector<std::vector<Pixel>> NeoPicoLEDAddon::generatedLEDWasd(std::vector<st
 std::vector<std::vector<Pixel>> NeoPicoLEDAddon::generatedLEDWasdFBM(std::vector<std::vector<uint8_t>> *positions)
 {
 	std::vector<std::vector<Pixel>> pixels =
-	{
 		{
-			PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
-			PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
-			PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
-			PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
-		},
-		{
-			PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
-			PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
-		},
-		{
-			NO_PIXEL,
-			PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
-		},
-		{
-			PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
-			PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
-		},
-		{
-			NO_PIXEL,
-			PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
-		},
-		{
-			PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
-			PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
-			PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
-			PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
-			PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
-			PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
-		},
-	};
+			{
+				PIXEL(BUTTON_LABEL_L1, GAMEPAD_MASK_L1),
+				PIXEL(BUTTON_LABEL_L2, GAMEPAD_MASK_L2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_R1, GAMEPAD_MASK_R1),
+				PIXEL(BUTTON_LABEL_R2, GAMEPAD_MASK_R2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_B4, GAMEPAD_MASK_B4),
+				PIXEL(BUTTON_LABEL_B2, GAMEPAD_MASK_B2),
+			},
+			{
+				PIXEL(BUTTON_LABEL_B3, GAMEPAD_MASK_B3),
+				PIXEL(BUTTON_LABEL_B1, GAMEPAD_MASK_B1),
+			},
+			{
+				NO_PIXEL,
+				PIXEL(BUTTON_LABEL_LEFT, GAMEPAD_MASK_DL),
+			},
+			{
+				PIXEL(BUTTON_LABEL_UP, GAMEPAD_MASK_DU),
+				PIXEL(BUTTON_LABEL_DOWN, GAMEPAD_MASK_DD),
+			},
+			{
+				NO_PIXEL,
+				PIXEL(BUTTON_LABEL_RIGHT, GAMEPAD_MASK_DR),
+			},
+			{
+				PIXEL(BUTTON_LABEL_S1, GAMEPAD_MASK_S1),
+				PIXEL(BUTTON_LABEL_S2, GAMEPAD_MASK_S2),
+				PIXEL(BUTTON_LABEL_L3, GAMEPAD_MASK_L3),
+				PIXEL(BUTTON_LABEL_R3, GAMEPAD_MASK_R3),
+				PIXEL(BUTTON_LABEL_A1, GAMEPAD_MASK_A1),
+				PIXEL(BUTTON_LABEL_A2, GAMEPAD_MASK_A2),
+			},
+		};
 
 	return pixels;
 }
@@ -418,44 +454,44 @@ std::vector<std::vector<Pixel>> NeoPicoLEDAddon::createLEDLayout(ButtonLayout la
 
 	switch (static_cast<ButtonLayout>(layout))
 	{
-		case BUTTON_LAYOUT_BLANKA:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_BLANKA:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_BUTTONS_BASIC:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_BUTTONS_BASIC:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_KEYBOARD_ANGLED:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_KEYBOARD_ANGLED:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_KEYBOARDA:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_KEYBOARDA:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_DANCEPADA:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_DANCEPADA:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_TWINSTICKA:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_TWINSTICKA:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_ARCADE:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_ARCADE:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_STICKLESS:
-			return generatedLEDStickless(&positions);
+	case BUTTON_LAYOUT_STICKLESS:
+		return generatedLEDStickless(&positions);
 
-		case BUTTON_LAYOUT_BUTTONS_ANGLED:
-			return generatedLEDWasd(&positions);
+	case BUTTON_LAYOUT_BUTTONS_ANGLED:
+		return generatedLEDWasd(&positions);
 
-		case BUTTON_LAYOUT_VLXA:
-			return generatedLEDButtons(&positions);
+	case BUTTON_LAYOUT_VLXA:
+		return generatedLEDButtons(&positions);
 
-		case BUTTON_LAYOUT_FIGHTBOARD_STICK:
-			return generatedLEDWasd(&positions);
+	case BUTTON_LAYOUT_FIGHTBOARD_STICK:
+		return generatedLEDWasd(&positions);
 
-		case BUTTON_LAYOUT_FIGHTBOARD_MIRRORED:
-			return generatedLEDWasdFBM(&positions);
+	case BUTTON_LAYOUT_FIGHTBOARD_MIRRORED:
+		return generatedLEDWasdFBM(&positions);
 
-		case BUTTON_LAYOUT_OPENCORE0WASDA:
-			return generatedLEDStickless(&positions);
+	case BUTTON_LAYOUT_OPENCORE0WASDA:
+		return generatedLEDStickless(&positions);
 	}
 
 	assert(false);
@@ -464,7 +500,7 @@ std::vector<std::vector<Pixel>> NeoPicoLEDAddon::createLEDLayout(ButtonLayout la
 
 uint8_t NeoPicoLEDAddon::setupButtonPositions()
 {
-	const LEDOptions& ledOptions = Storage::getInstance().getLedOptions();
+	const LEDOptions &ledOptions = Storage::getInstance().getLedOptions();
 	buttonPositions.clear();
 	buttonPositions.emplace(BUTTON_LABEL_UP, ledOptions.indexUp);
 	buttonPositions.emplace(BUTTON_LABEL_DOWN, ledOptions.indexDown);
@@ -485,7 +521,7 @@ uint8_t NeoPicoLEDAddon::setupButtonPositions()
 	buttonPositions.emplace(BUTTON_LABEL_A1, ledOptions.indexA1);
 	buttonPositions.emplace(BUTTON_LABEL_A2, ledOptions.indexA2);
 	uint8_t buttonCount = 0;
-	for (auto const& buttonPosition : buttonPositions)
+	for (auto const &buttonPosition : buttonPositions)
 	{
 		if (buttonPosition.second > -1)
 			buttonCount++;
@@ -496,7 +532,7 @@ uint8_t NeoPicoLEDAddon::setupButtonPositions()
 
 void NeoPicoLEDAddon::configureLEDs()
 {
-	const LEDOptions& ledOptions = Storage::getInstance().getLedOptions();
+	const LEDOptions &ledOptions = Storage::getInstance().getLedOptions();
 	uint8_t buttonCount = setupButtonPositions();
 	vector<vector<Pixel>> pixels = createLEDLayout(static_cast<ButtonLayout>(ledOptions.ledLayout), ledOptions.ledsPerButton, buttonCount);
 	matrix.setup(pixels, ledOptions.ledsPerButton);

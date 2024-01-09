@@ -195,6 +195,8 @@ private:
 	AnimationStation as;
 	std::map<std::string, int> buttonPositions;
 	bool turnOffWhenSuspended;
+	bool isFocusModeEnabled;
+	bool focusModePrevState;
 };
 
 #endif
